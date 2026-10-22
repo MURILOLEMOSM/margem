@@ -1,0 +1,17 @@
+{
+  "name": "margem",
+  "version": "1.0.0",
+  "description": "Diário de leitura open source: estante com foto da capa, sessões cronometradas, notas por voz e flashcards com revisão espaçada.",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "author": "Murilo Lemos",
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "build": "node scripts/build.mjs",
+    "preview": "node scripts/build.mjs && npx --yes serve dist"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
