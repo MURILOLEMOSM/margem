@@ -1,6 +1,6 @@
 // Margem service worker: app shell em cache, fontes e capas em cache de execução
 const V = "margem-__VERSION__";
-const SHELL = ["./", "index.html", "manifest.webmanifest", "styles.css", "app.js", "icons/icon-192.png", "icons/icon-512.png"];
+const SHELL = ["./", "index.html", "manifest.webmanifest", "styles.css", "app.js", "sync.js", "config.js", "vendor/supabase-2.116.0.js", "icons/icon-192.png", "icons/icon-512.png"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(V).then(c => c.addAll(SHELL))); self.skipWaiting(); });
 self.addEventListener("activate", e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== V).map(k => caches.delete(k))))); self.clients.claim(); });
 self.addEventListener("fetch", e => {

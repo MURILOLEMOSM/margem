@@ -100,18 +100,20 @@ const DB = {
 };
 const IMG = {}; // id -> dataURL
 async function putImg(dataURL) { const id = "i" + uid(); IMG[id] = dataURL; await DB.set("img", id, dataURL); return id; }
-async function dropImg(id) { if (!id) return; delete IMG[id]; await DB.del("img", id); }
+async function dropImg(id) { if (!id) return; delete IMG[id]; await DB.del("img", id); if (window.Sync) Sync.queueImgDelete(id); }
 
 const DEFAULT = () => ({
   v: 1, books: [], sessions: [], notes: [], cards: [], reviews: [],
   folders: ["Geral", "Ideias", "Para reler"],
   wishlist: [],
   settings: { name: "", weekGoal: 210, yearGoal: 12, theme: "system" },
-  active: null, seeded: false, createdAt: Date.now()
+  active: null, seeded: false, createdAt: Date.now(), deleted: {}, updatedAt: 0
 });
 let S = DEFAULT();
 let saveT = null;
-function save() { clearTimeout(saveT); saveT = setTimeout(() => DB.set("kv", "state", S), 250); }
+function save() { S.updatedAt = Date.now(); clearTimeout(saveT); saveT = setTimeout(() => DB.set("kv", "state", S), 250); if (window.Sync) Sync.schedule(); }
+/* marca exclusões para a sincronização não trazer o item de volta de outro aparelho */
+function tomb(...ids) { S.deleted = S.deleted || {}; const t = Date.now(); ids.flat().forEach(id => { if (id) S.deleted[id] = t; }); }
 
 /* ---------------- estado da interface ---------------- */
 const UI = { view: "home", bookId: null, shelfF: "all", shelfMode: "covers", q: "", nf: "all", nq: "", bookTab: "notes", calM: sod(new Date(new Date().setDate(1))), period: "week", back: "shelf" };
@@ -148,6 +150,7 @@ function seed() {
   S.seeded = true;
 }
 function clearSamples() {
+  tomb([...S.books, ...S.sessions, ...S.notes, ...S.cards].filter(x => x.sample).map(x => x.id), "__samples");
   S.books = S.books.filter(b => !b.sample); S.sessions = S.sessions.filter(x => !x.sample);
   S.notes = S.notes.filter(x => !x.sample); S.cards = S.cards.filter(x => !x.sample); S.reviews = S.reviews.filter(x => !x.sample);
   if (S.active && !S.books.find(b => b.id === S.active.bookId)) S.active = null;
@@ -502,6 +505,7 @@ function chartSVG(m) {
 function viewSettings() {
   const s = S.settings;
   return `${topbar("Ajustes", { back: "home", right: "" })}
+  ${window.Sync ? Sync.settingsHTML() : ""}
   <section class="form card">
     <div class="field"><label for="sName">Seu nome</label><input id="sName" value="${esc(s.name)}" placeholder="Como quer ser chamado"></div>
     <div class="two">
@@ -692,6 +696,7 @@ async function delBook(id) {
   const b = bookById(id); if (!b) return;
   if (b.coverId) await dropImg(b.coverId);
   for (const n of S.notes.filter(n => n.bookId === id)) if (n.imgId) await dropImg(n.imgId);
+  tomb(id, [...S.notes, ...S.cards, ...S.sessions].filter(x => x.bookId === id).map(x => x.id));
   S.books = S.books.filter(x => x.id !== id); S.notes = S.notes.filter(x => x.bookId !== id); S.cards = S.cards.filter(x => x.bookId !== id); S.sessions = S.sessions.filter(x => x.bookId !== id);
   if (S.active && S.active.bookId === id) S.active = null;
   save(); toast("Livro excluído."); go("shelf");
@@ -723,7 +728,7 @@ function noteForm(n, preset = {}) {
       if (k === "col") { draft.color = +x.dataset.c; sh.querySelectorAll('[data-x="col"]').forEach(b => b.setAttribute("aria-pressed", b === x)); }
       if (k === "mic") dictate(x, $("#nText"));
       if (k === "photo") pickImage(true, async f => { try { const r = await fileToDataURL(f, 1000, 0.78); draft.img = r.data; $("#nImg").textContent = "Foto anexada"; } catch (err) { toast("Não consegui ler a imagem."); } });
-      if (k === "del") confirmSheet("Apagar nota?", "Essa ação não pode ser desfeita.", "Apagar", async () => { if (n.imgId) await dropImg(n.imgId); S.notes = S.notes.filter(x => x.id !== n.id); save(); render(); toast("Nota apagada."); });
+      if (k === "del") confirmSheet("Apagar nota?", "Essa ação não pode ser desfeita.", "Apagar", async () => { if (n.imgId) await dropImg(n.imgId); tomb(n.id); S.notes = S.notes.filter(x => x.id !== n.id); save(); render(); toast("Nota apagada."); });
       if (k === "toCard") { closeSheet(); cardForm(null, { bookId: n.bookId, front: n.kind === "quote" ? "Complete a citação: “" + n.text.split(" ").slice(0, 4).join(" ") + "…”" : (n.title ? n.title + "?" : ""), back: n.text }); }
       if (k === "save") {
         stopDictation();
@@ -754,7 +759,7 @@ function cardForm(c, preset = {}) {
     sh.addEventListener("click", e => {
       const x = e.target.closest("[data-x]"); if (!x) return; const k = x.dataset.x;
       if (k === "mic") dictate(x, $("#" + x.dataset.t));
-      if (k === "del") confirmSheet("Apagar flashcard?", "Ele sai da sua fila de revisão.", "Apagar", () => { S.cards = S.cards.filter(y => y.id !== c.id); save(); render(); });
+      if (k === "del") confirmSheet("Apagar flashcard?", "Ele sai da sua fila de revisão.", "Apagar", () => { tomb(c.id); S.cards = S.cards.filter(y => y.id !== c.id); save(); render(); });
       if (k === "save" || k === "saveMore") {
         stopDictation();
         const front = $("#cFront").value.trim(), back = $("#cBack").value.trim();
@@ -928,7 +933,7 @@ const ACT = {
   rate: d => { const b = bookById(UI.bookId); b.rating = b.rating === +d.r ? 0 : +d.r; save(); render(); },
   setStatus: d => { const b = bookById(UI.bookId); b.status = d.s; if (d.s === "lendo") { b.currentPage = 0; b.finishedAt = null; b.startedAt = Date.now(); } save(); render(); },
   saveReview: () => { const b = bookById(UI.bookId); b.review = $("#fReview").value.trim(); save(); toast("Resenha salva."); },
-  delSession: d => confirmSheet("Apagar sessão?", "O tempo e as páginas dela saem das suas estatísticas.", "Apagar", () => { S.sessions = S.sessions.filter(s => s.id !== d.id); save(); render(); }),
+  delSession: d => confirmSheet("Apagar sessão?", "O tempo e as páginas dela saem das suas estatísticas.", "Apagar", () => { tomb(d.id); S.sessions = S.sessions.filter(s => s.id !== d.id); save(); render(); }),
   manualLog: d => manualLog(d.id),
   addNote: d => noteForm(null, d.book ? { bookId: d.book } : {}),
   editNote: d => noteForm(S.notes.find(n => n.id === d.id)),
@@ -958,7 +963,7 @@ const ACT = {
     setTimeout(() => URL.revokeObjectURL(a.href), 4000); toast("Backup gerado.");
   },
   importData: () => { const el = $("#pickJson"); el.value = ""; el.click(); },
-  wipe: () => confirmSheet("Apagar tudo?", "Todos os livros, fotos, notas, cards e sessões deste aparelho serão removidos. Faça um backup antes se quiser guardar.", "Apagar tudo", async () => { await DB.clear("img"); for (const k in IMG) delete IMG[k]; S = DEFAULT(); S.seeded = true; save(); go("home"); toast("Tudo apagado."); }),
+  wipe: () => confirmSheet("Apagar tudo?", "Todos os livros, fotos, notas, cards e sessões serão removidos, inclusive da nuvem se você estiver conectado. Faça um backup antes se quiser guardar.", "Apagar tudo", async () => { const ids = [...S.books, ...S.sessions, ...S.notes, ...S.cards].map(x => x.id); for (const k of Object.keys(IMG)) await dropImg(k); await DB.clear("img"); const keep = { syncedOnce: S.syncedOnce, deleted: S.deleted }; S = Object.assign(DEFAULT(), keep); tomb(ids, "__samples"); S.seeded = true; save(); go("home"); toast("Tudo apagado."); }),
 };
 $("#pickJson").addEventListener("change", async e => {
   const f = e.target.files[0]; if (!f) return;
@@ -1005,4 +1010,5 @@ function applyTheme() { const t = S.settings.theme; if (t === "light" || t === "
   if (!S.seeded) { seed(); save(); }
   applyTheme(); render();
   if (S.active) openSession();
+  window.__margemBooted = true; if (window.Sync) Sync.init();
 })();
