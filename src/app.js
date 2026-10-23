@@ -288,8 +288,10 @@ function viewHome() {
   const note = pool.length ? pool[(new Date().getDate() + new Date().getMonth() * 31) % pool.length] : null;
   const yr = new Date().getFullYear(), doneYr = S.books.filter(b => b.status === "lido" && b.finishedAt && new Date(b.finishedAt).getFullYear() === yr).length;
   const r = 46, c = 2 * Math.PI * r, f = Math.min(1, frac);
-  return `${topbar("")}
+  const gear = `<button class="ib" data-a="go" data-v="settings" aria-label="Ajustes">${I.gear}</button>`;
+  return `${topbar("", { right: `<div class="tbr">${window.Install ? Install.buttonHTML() : ""}${gear}</div>` })}
   ${sampleBanner()}
+  ${window.Install ? Install.cardHTML() : ""}
   <section class="hero">
     <div class="fhead"><span>Ficha de leitura</span><span class="num">Sem. ${pad(isoWeek())} · Nº ${String(S.sessions.length).padStart(4, "0")}</span></div>
     <div class="htop"><div><p class="eyebrow">${greeting()}${S.settings.name ? ", " + esc(S.settings.name) : ""}</p><h2 class="num">${hmin(wsec)}<small>lidas nesta semana</small></h2></div><span class="stamp" title="Dias seguidos lendo"><b class="num">${st}</b>${st === 1 ? "dia" : "dias"} seguidos</span></div>
@@ -519,6 +521,7 @@ function viewSettings() {
     <div class="sh"><h2>Seus dados</h2></div>
     <p class="hint" style="margin-bottom:14px">Tudo fica guardado só neste aparelho, sem conta e sem servidor. Faça um backup de vez em quando, principalmente antes de trocar de celular.</p>
     <div class="list">
+      ${window.Install && Install.can() ? `<button class="li" data-a="install" style="text-align:left"><div class="ic">${I.download}</div><div class="grow"><b>Instalar o app</b><small>Ícone na tela inicial, tela cheia e uso offline</small></div></button>` : ""}
       <button class="li" data-a="exportData" style="text-align:left"><div class="ic">${I.download}</div><div class="grow"><b>Exportar backup</b><small>Arquivo .json com livros, notas, cards, sessões e fotos</small></div></button>
       <button class="li" data-a="importData" style="text-align:left"><div class="ic">${I.upload}</div><div class="grow"><b>Importar backup</b><small>Substitui os dados atuais pelos do arquivo</small></div></button>
       ${S.seeded && !hasSamples() ? `<button class="li" data-a="loadSamples" style="text-align:left"><div class="ic">${I.book}</div><div class="grow"><b>Carregar exemplos</b><small>Livros, notas e cards de demonstração</small></div></button>` : ""}
@@ -539,7 +542,8 @@ function renderTabs() {
   const t = (key, label, icon, extra = "") => `<button class="tab" data-a="go" data-v="${key}" ${v === key ? 'aria-current="page"' : ""}>${icon}${extra}<span>${label}</span><i class="dot"></i></button>`;
   $("#tabs").innerHTML = t("home", "Início", I.home) + t("shelf", "Estante", I.shelf) +
     `<button class="tab-go ${S.active ? "live" : ""}" data-a="startSession" aria-label="${S.active ? "Voltar à sessão" : "Iniciar sessão de leitura"}">${S.active ? I.clock : MARK_NIGHT}</button>` +
-    t("notes", "Notas", I.notes) + t("cards", "Cards", I.cards, due ? `<span class="badge num">${due}</span>` : "");
+    t("notes", "Notas", I.notes) + t("cards", "Cards", I.cards, due ? `<span class="badge num">${due}</span>` : "") +
+    `<button class="tab tab-inst" data-a="install">${I.download}<span>Instalar</span></button>`;
 }
 
 function render() {
