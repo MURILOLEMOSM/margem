@@ -177,10 +177,10 @@ main.enter > *:nth-child(2){animation-delay:.04s} main.enter > *:nth-child(3){an
 .cover img{position:absolute;inset:0;z-index:1;width:100%;height:100%;object-fit:cover;display:block}
 .deck .cover .tc,.res .cover .tc{display:none}
 .cover .tc{position:absolute;inset:0;padding:12% 10% 10% 15%;display:flex;flex-direction:column;justify-content:space-between;color:#F6EFE2}
-.cover .tc .t{font-family:var(--display);font-size:clamp(13px,4vw,19px);line-height:1.02;overflow-wrap:break-word;hyphens:auto}
+.cover .tc .t{font-family:var(--display);font-size:clamp(13px,4vw,19px);line-height:1.02;overflow-wrap:normal;word-break:normal;hyphens:manual}
 .cover .tc .a{font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;opacity:.8}
 .cover .tc::after{content:"";position:absolute;left:15%;right:10%;top:44%;height:1px;background:rgba(255,255,255,.3)}
-.cover.lg .tc .t{font-size:22px}
+.cover.lg .tc .t{font-size:clamp(16px,4.6vw,22px)}
 .cover.lg .tc .a{font-size:10.5px}
 
 /* estante */
@@ -228,7 +228,7 @@ main.enter > *:nth-child(2){animation-delay:.04s} main.enter > *:nth-child(3){an
 
 /* notas: papeizinhos com fita */
 .masonry{columns:2;column-gap:14px;padding-top:8px}
-.note{break-inside:avoid;margin:0 0 18px;border-radius:3px;padding:18px 14px 12px;background:var(--n1);position:relative;display:block;width:100%;text-align:left;box-shadow:0 1px 0 rgba(0,0,0,.06),0 10px 16px -12px rgba(0,0,0,.4)}
+.note{break-inside:avoid;-webkit-column-break-inside:avoid;display:inline-block!important;vertical-align:top;margin:0 0 18px;border-radius:3px;padding:18px 14px 12px;background:var(--n1);position:relative;display:block;width:100%;text-align:left;box-shadow:0 1px 0 rgba(0,0,0,.06),0 10px 16px -12px rgba(0,0,0,.4)}
 .note:nth-child(3n+1){transform:rotate(-.8deg)} .note:nth-child(3n+2){transform:rotate(.6deg)}
 .note::before{content:"";position:absolute;top:-8px;left:50%;width:54px;height:16px;margin-left:-27px;background:var(--tape);transform:rotate(-3deg);box-shadow:0 1px 2px rgba(0,0,0,.12)}
 .note.c2{background:var(--n2)}.note.c3{background:var(--n3)}.note.c4{background:var(--n4)}.note.c5{background:var(--n5)}
@@ -369,3 +369,120 @@ main.enter > *:nth-child(2){animation-delay:.04s} main.enter > *:nth-child(3){an
 
 @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
 @media (max-width:370px){.week .c{width:32px;height:32px}.hero h2{font-size:44px}}
+
+/* ============================================================
+   RESPONSIVO
+   até 359px: celular pequeno · 600px+: tablet · 960px+: computador
+   ============================================================ */
+
+/* celular pequeno */
+@media (max-width:359px){
+  .trio{grid-template-columns:1fr 1fr}
+  .trio .mini:nth-child(3){grid-column:span 2}
+  .hmid{gap:12px} .hring{width:86px;height:86px} .hring b{font-size:26px}
+  .now{grid-template-columns:78px minmax(0,1fr);gap:12px}
+  .now h3{font-size:23px}
+  .bhead{grid-template-columns:96px minmax(0,1fr);gap:14px}
+  .bhead h2{font-size:28px}
+  .tab{font-size:8.5px;letter-spacing:.04em}
+  .tab-go{width:50px;height:50px}
+  .facts b,.totals b{font-size:24px}
+  .masonry{column-gap:10px}
+  .grades button{font-size:12.5px}
+  .cal .c{width:30px;height:30px;font-size:11.5px}
+}
+
+/* tablet */
+@media (min-width:600px){
+  #app{max-width:760px}
+  .grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+  .masonry{columns:3}
+  .ach{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .shelfrow .tile{width:118px}
+  .bhead{grid-template-columns:160px minmax(0,1fr)}
+  .bhead h2{font-size:44px}
+  .fab{right:max(24px,calc(50% - 356px))}
+  /* folhas viram janelas centralizadas */
+  #sheet{align-items:center;padding:24px}
+  .panel{border-radius:10px;max-height:min(88vh,880px);padding:14px 26px 26px;box-shadow:0 30px 60px -20px rgba(0,0,0,.6)}
+  .grab{display:none}
+}
+
+/* computador: barra lateral e telas em duas colunas */
+@media (min-width:960px){
+  #app{max-width:1240px;padding-left:max(144px,env(safe-area-inset-left,0px));padding-right:max(32px,env(safe-area-inset-right,0px));padding-block:0 48px}
+  main{gap:24px}
+  .tabbar{top:16px;bottom:16px;left:16px;right:auto;width:96px;padding:0}
+  .tabbar .in{height:100%;max-width:none;display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:6px;padding:18px 8px;border-radius:16px}
+  .tab{padding:12px 0;font-size:10.5px}
+  .tab svg{width:22px;height:22px}
+  .tab-go{order:-1;margin:4px auto 18px;width:62px;height:62px;box-shadow:inset 0 0 0 3px rgba(255,255,255,.18),inset 0 0 0 5px var(--stamp),inset 0 0 0 6px rgba(255,255,255,.35)}
+  .tab-go.live{box-shadow:none}
+  .badge{left:calc(50% + 6px);top:6px}
+  .bar{padding:20px 0 12px}
+  .bar h1{font-size:40px}
+  .fab{bottom:32px;right:max(32px,calc((100vw - 1240px)/2 + 32px))}
+  #toast{bottom:32px;left:calc(50% + 56px)}
+  .ib:hover,.chip:hover,.deck:hover,.li:hover{filter:brightness(.97)}
+  .tile:hover .cover,.now button:hover .cover{transform:translateY(-4px) rotate(-1deg);transition:transform .25s}
+
+  main[data-view]{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px 28px;align-items:start}
+  main[data-view] > *{grid-column:1 / -1}
+
+  /* início: ficha à esquerda, livro atual e resumo à direita */
+  main[data-view="home"] > .hero{grid-column:1;grid-row:span 3}
+  main[data-view="home"] > .now,main[data-view="home"] > .also,main[data-view="home"] > .trio,main[data-view="home"] > .resurface,main[data-view="home"] > .empty{grid-column:2}
+  main[data-view="home"] > .hero h2{font-size:64px}
+  main[data-view="home"] > .hero .hring{width:128px;height:128px}
+
+  /* livro: capa e números à esquerda, notas e cards à direita */
+  main[data-view="book"]{grid-template-columns:380px minmax(0,1fr)}
+  main[data-view="book"] > .bhead,main[data-view="book"] > .bprog,main[data-view="book"] > .facts{grid-column:1}
+  main[data-view="book"] > .btabs{grid-column:2;grid-row:2 / span 4}
+  main[data-view="book"] .bhead{grid-template-columns:150px minmax(0,1fr)}
+  main[data-view="book"] .bhead h2{font-size:38px}
+  main[data-view="book"] .masonry{columns:2}
+
+  /* números */
+  main[data-view="stats"] > .s-cal{grid-column:1}
+  main[data-view="stats"] > .s-chart{grid-column:2}
+  main[data-view="stats"] > .yeargoal{grid-column:1}
+  main[data-view="stats"] > .s-recs{grid-column:2;grid-row:span 2}
+  main[data-view="stats"] .ach{grid-template-columns:repeat(6,minmax(0,1fr))}
+  main[data-view="stats"] .chart{max-height:300px}
+
+  /* flashcards */
+  main[data-view="cards"] > .due{grid-column:1;position:sticky;top:96px}
+  main[data-view="cards"] > .decks{grid-column:2;grid-row:span 2}
+  main[data-view="cards"] > .hint{grid-column:1}
+
+  /* ajustes */
+  main[data-view="settings"] > .card{grid-column:auto}
+
+  .grid{grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:28px 22px}
+  .masonry{columns:3}
+  .shelves .plank{min-height:180px}
+}
+@media (min-width:1280px){
+  .masonry{columns:4}
+  main[data-view="book"] .masonry{columns:3}
+}
+
+/* celular deitado ou tela baixa: sessão e revisão compactas */
+@media (max-height:560px) and (orientation:landscape){
+  .fs{display:grid;grid-template-columns:auto 1fr;grid-auto-rows:min-content;align-items:center;gap:12px 24px;text-align:left;max-width:900px}
+  .fs .top{grid-column:1 / -1}
+  .fs .cover{width:84px;grid-row:span 3}
+  .timer{font-size:clamp(56px,16vh,96px)}
+  .fs .bigz{width:56px;height:56px}
+  .fs .bigz + small{display:none}
+  .fs .ctrl{grid-column:1 / -1;margin-top:8px}
+  .fs .sessnotes{display:none}
+  .fs:has(.flash){display:flex;flex-direction:column;align-items:stretch}
+  .flash{min-height:180px;max-height:52vh}
+  .flash .face p{font-size:22px}
+  .tabbar{bottom:6px}
+  .tab{padding:4px 0} .tab > span:not(.badge){display:none}
+  .tab-go{width:46px;height:46px;margin-top:-8px}
+  #app{padding-block:0 84px}
+}

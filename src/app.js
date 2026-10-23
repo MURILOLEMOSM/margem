@@ -308,7 +308,7 @@ function viewHome() {
         <div class="prog"><i style="width:${pct(cur)}%"></i></div><small class="muted num">p. ${cur.currentPage || 0} de ${cur.pages || "?"} · ${pct(cur)}%</small>
         <button class="btn acc sm" data-a="startSession" data-id="${cur.id}">${I.play} Ler agora</button></div>
     </section>` : `<section class="card empty"><h3>Nada aberto na cabeceira</h3><p>Fotografe a capa do livro que você está lendo e ele aparece aqui.</p><button class="btn" data-a="addBook">${I.cam} Adicionar livro</button></section>`}
-  ${rest.length ? `<section><div class="sh"><h2>Também na cabeceira</h2><button class="link" data-a="go" data-v="shelf">Estante</button></div><div class="shelfrow">${rest.map(b => `<button class="tile" data-a="openBook" data-id="${b.id}">${coverHTML(b)}<div class="prog"><i style="width:${pct(b)}%"></i></div><div class="meta"><b>${esc(b.title)}</b><span class="muted num">${pct(b)}%</span></div></button>`).join("")}</div></section>` : ""}
+  ${rest.length ? `<section class="also"><div class="sh"><h2>Também na cabeceira</h2><button class="link" data-a="go" data-v="shelf">Estante</button></div><div class="shelfrow">${rest.map(b => `<button class="tile" data-a="openBook" data-id="${b.id}">${coverHTML(b)}<div class="prog"><i style="width:${pct(b)}%"></i></div><div class="meta"><b>${esc(b.title)}</b><span class="muted num">${pct(b)}%</span></div></button>`).join("")}</div></section>` : ""}
   <section class="trio">
     <button class="mini" data-a="go" data-v="cards"><span class="k num">${due}</span><span class="l">${due === 1 ? "card hoje" : "cards hoje"}</span></button>
     <button class="mini" data-a="go" data-v="stats"><span class="k num">${doneYr}<span class="muted" style="font-size:16px">/${S.settings.yearGoal}</span></span><span class="l">livros em ${yr}</span></button>
@@ -367,7 +367,7 @@ function viewBook() {
       <div class="stars">${stars}</div>
     </div>
   </section>
-  <section class="card" style="display:flex;flex-direction:column;gap:10px">
+  <section class="card bprog" style="display:flex;flex-direction:column;gap:10px">
     <div class="row"><b class="grow num">Página ${b.currentPage || 0} de ${b.pages || "?"}</b><span class="num muted">${pct(b)}%</span></div>
     <div class="prog" style="height:6px"><i style="width:${pct(b)}%"></i></div>
     ${st.eta ? `<small class="muted">No seu ritmo atual, termina por volta de ${fmtDate(st.eta)}.</small>` : st.left && b.status === "lendo" ? `<small class="muted">Faltam ${st.left} páginas.</small>` : ""}
@@ -381,7 +381,7 @@ function viewBook() {
     <div><b class="num">${st.ss.length}</b><small>sessões</small></div>
     <div><b class="num">${st.pph ? Math.round(st.pph) : "–"}</b><small>páginas/hora</small></div>
   </section>
-  <section style="display:flex;flex-direction:column;gap:14px">
+  <section class="btabs" style="display:flex;flex-direction:column;gap:14px">
     <div class="seg">${[["notes", "Notas " + notes.length], ["cards", "Cards " + cards.length], ["sessions", "Sessões"], ["review", "Resenha"]].map(([k, l]) => `<button aria-pressed="${tab === k}" data-a="bookTab" data-t="${k}">${l}</button>`).join("")}</div>
     <div class="row">
       <button class="btn alt sm grow" data-a="addNote" data-book="${b.id}">${I.bulb} Nova nota</button>
@@ -436,7 +436,7 @@ function viewCards() {
     <div class="grow"><div class="k num">${due.length}</div><div>${due.length === 1 ? "cartão para hoje" : "cartões para hoje"}</div><small style="opacity:.7">${reviewedToday} revisados hoje</small></div>
     <button class="btn" data-a="review" ${due.length ? "" : "disabled"}>Revisar</button>
   </section>
-  <section>
+  <section class="decks">
     <div class="sh"><h2>Por livro</h2><span class="muted num" style="font-size:13px">${plural(S.cards.length, "cartão", "cartões")}</span></div>
     ${decks.length ? `<div class="list">${decks.map(d => `<button class="deck" data-a="openDeck" data-k="${d.k}"><div class="cv">${d.b ? coverHTML(d.b) : `<div class="cover"></div>`}</div><div class="grow"><b>${esc(d.b ? d.b.title : "Sem livro")}</b><small class="muted num">${plural(d.cs.length, "cartão", "cartões")}</small></div>${d.due ? `<span class="pill hot num">${d.due} hoje</span>` : `<span class="pill">em dia</span>`}</button>`).join("")}</div>`
       : `<div class="empty"><h3>Fixe o que você leu</h3><p>Crie perguntas sobre o livro. O app agenda a revisão no momento certo, antes de você esquecer.</p><button class="btn" data-a="addCard">${I.plus} Criar flashcard</button></div>`}
@@ -456,18 +456,18 @@ function viewStats() {
   const yr = new Date().getFullYear(), doneYr = S.books.filter(b => b.status === "lido" && b.finishedAt && new Date(b.finishedAt).getFullYear() === yr).length, goal = S.settings.yearGoal || 12;
   const bestDay = Object.values(m).reduce((a, e) => Math.max(a, e.pages), 0);
   return `${topbar("Números", { back: "home" })}
-  <section class="card">
+  <section class="card s-cal">
     <div class="calhead"><button class="ib" data-a="calM" data-d="-1" aria-label="Mês anterior">${I.left}</button><h3>${MES[mo][0].toUpperCase() + MES[mo].slice(1)} ${y}</h3><button class="ib" data-a="calM" data-d="1" aria-label="Próximo mês">${I.right}</button></div>
     <div class="totals"><div><b class="num">${mDays}</b><small>dias ativos</small></div><div><b class="num">${hmin(mSec)}</b><small>tempo de leitura</small></div><div><b class="num">${mPages}</b><small>páginas lidas</small></div></div>
     <div class="cal">${cells}</div>
   </section>
-  <section class="card">
+  <section class="card s-chart">
     <div class="sh"><h2>Minutos lidos</h2></div>
     <div class="seg" style="margin-bottom:14px">${[["week", "Semana"], ["month", "Mês"], ["year", "Ano"]].map(([k, l]) => `<button aria-pressed="${UI.period === k}" data-a="period" data-p="${k}">${l}</button>`).join("")}</div>
     ${chartSVG(m)}
   </section>
   <section class="card yeargoal">${ringSVG(doneYr / goal)}<div><h3><span class="num">${doneYr}</span> de ${goal} livros</h3><small class="muted">Meta de ${yr}. ${doneYr >= goal ? "Meta batida." : "Faltam " + (goal - doneYr) + "."}</small></div></section>
-  <section>
+  <section class="s-recs">
     <div class="sh"><h2>Recordes</h2></div>
     <div class="recs">
       <div><b class="num">${bestStreak(m)}</b><small>maior sequência de dias</small></div>
@@ -476,7 +476,7 @@ function viewStats() {
       <div><b class="num">${hmin(ctx.sec)}</b><small>tempo total lido</small></div>
     </div>
   </section>
-  <section>
+  <section class="s-ach">
     <div class="sh"><h2>Conquistas</h2><span class="muted num" style="font-size:13px">Nível ${lv.lvl} · ${lv.xp.toLocaleString("pt-BR")} XP</span></div>
     <div class="ach">${ACH.map(([t, d, f]) => `<div class="${f(ctx) ? "" : "off"}"><span class="medal">${I.medal}</span><b>${t}</b><small>${d}</small></div>`).join("")}</div>
   </section>
@@ -544,7 +544,7 @@ function renderTabs() {
 
 function render() {
   const views = { home: viewHome, shelf: viewShelf, book: viewBook, notes: viewNotes, cards: viewCards, stats: viewStats, settings: viewSettings };
-  $("#main").innerHTML = (views[UI.view] || viewHome)();
+  const main = $("#main"); main.dataset.view = UI.view; main.innerHTML = (views[UI.view] || viewHome)();
   renderTabs();
 }
 function go(v) { UI.view = v; render(); window.scrollTo(0, 0); const m = $("#main"); m.classList.remove("enter"); void m.offsetWidth; m.classList.add("enter"); clearTimeout(go.t); go.t = setTimeout(() => m.classList.remove("enter"), 900); }
